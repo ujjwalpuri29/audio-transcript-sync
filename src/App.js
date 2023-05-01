@@ -1,25 +1,57 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useRef } from "react";
+import audioFile from "./audio.mp3";
+import transcriptAudio from "./transcript.json";
+import "./App.css";
 
-function App() {
+const App = () => {
+  const playerRef = useRef(null);
+  const wordsRef = useRef(null);
+
+  useEffect(() => {
+    var a;
+    const onTimeUpdate = () => {
+      const activeWordIndex = transcriptAudio.findIndex((word) => {
+        return word.start >= playerRef.current.currentTime;
+      });
+
+      const currentWordElement =
+        wordsRef.current.childNodes[activeWordIndex - 1];
+      const previousWordElement = wordsRef.current.childNodes[a - 1];
+
+      try {
+        currentWordElement.classList.add("active-word");
+      } catch (error) {
+        console.log(error);
+      }
+
+      try {
+        previousWordElement.classList.remove("active-word");
+      } catch (error) {
+        console.log(error);
+      }
+      a = activeWordIndex;
+    };
+
+    playerRef.current.addEventListener("timeupdate", onTimeUpdate);
+
+    const removeRef = () =>
+      playerRef.current.removeEventListener("timeupdate", onTimeUpdate);
+
+    return () => removeRef();
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div class="flex">
+      <div class="container">
+        <div ref={wordsRef}>
+          {transcriptAudio.map((word, i) => (
+            <span key={i}>{word.word + " "}</span>
+          ))}
+        </div>
+        <audio controls src={audioFile} ref={playerRef} />
+      </div>
     </div>
   );
-}
+};
 
 export default App;
